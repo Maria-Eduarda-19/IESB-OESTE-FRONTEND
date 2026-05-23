@@ -1,13 +1,10 @@
-import "./styles/theme.css";
-import "./styles/global.css";
-import { Heading } from "./components/Heading";
+// src/App.jsx
+import { Heading } from './components/Heading';
 
-function App() {
+export function App() {
   return (
     <>
       <Heading />
     </>
   );
 }
-
-export default App;

@@ -1,7 +1,26 @@
 .heading {
-  background-color: brown;
-  color: white;
+  background-color: rgb(174, 165, 165);
+  padding: 20px;
+  border-radius: 8px;
 }
+
 .cyanText {
-  color: cyan;
+  color: rgb(119, 5, 180);
+}
+
+.button {
+  background-color: rgb(149, 74, 74);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.card {
+  background-color: #f09c9c;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
 }
