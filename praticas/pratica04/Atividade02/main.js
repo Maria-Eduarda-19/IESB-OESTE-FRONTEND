@@ -1,10 +1,10 @@
-(() => {
-  function somar(a, b) {
-    return a + b;
-  }
+// (() => {
+//   function somar(a, b) {
+//     return a + b;
+//   }
 
-  console.log("Teste");
+//   console.log("Teste");
 
-  var resultado = somar(3, 5);
-  console.log(resultado);
-})();
+//   var resultado = somar(3, 5);
+//   console.log(resultado);
+// })();
