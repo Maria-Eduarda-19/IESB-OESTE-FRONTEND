@@ -4,78 +4,75 @@ import {
   MoonIcon,
   SettingsIcon,
   SunIcon,
-} from "lucide-react";
-import styles from "./styles.module.css";
-import { useState, useEffect } from "react";
+} from 'lucide-react';
+import styles from './styles.module.css';
+import { useState, useEffect } from 'react';
+import { RouterLink } from '../RouterLink';
 
-type AvailableThemes = "dark" | "light";
+type AvailableThemes = 'dark' | 'light';
 
 export function Menu() {
-  // 1. Inicialização preguiçosa buscando do localStorage
   const [theme, setTheme] = useState<AvailableThemes>(() => {
     const storageTheme =
-      (localStorage.getItem("theme") as AvailableThemes) || "dark";
+      (localStorage.getItem('theme') as AvailableThemes) || 'dark';
     return storageTheme;
   });
 
-  // 2. Dicionário de ícones baseado no tema atual
   const nextThemeIcon = {
     dark: <SunIcon />,
     light: <MoonIcon />,
   };
 
-  // 3. Função pura de atualização de estado
   function handleThemeChange(
     event: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
   ) {
     event.preventDefault();
 
-    setTheme((prevTheme) => {
-      const nextTheme = prevTheme === "dark" ? "light" : "dark";
+    setTheme(prevTheme => {
+      const nextTheme = prevTheme === 'dark' ? 'light' : 'dark';
       return nextTheme;
     });
   }
 
-  // 4. Efeito Colateral: Aplica no HTML e salva no Storage
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
   }, [theme]);
 
   return (
     <nav className={styles.menu}>
-      <a
+      <RouterLink
         className={styles.menuLink}
-        href="#"
-        aria-label="Ir para a Home"
-        title="Ir para a Home"
+        href='/'
+        aria-label='Ir para a Home'
+        title='Ir para a Home'
       >
         <HouseIcon />
-      </a>
+      </RouterLink>
 
-      <a
+      <RouterLink
         className={styles.menuLink}
-        href="#"
-        aria-label="Ver Histórico"
-        title="Ver Histórico"
+        href='/history/'
+        aria-label='Ver Histórico'
+        title='Ver Histórico'
       >
         <HistoryIcon />
-      </a>
+      </RouterLink>
 
-      <a
+      <RouterLink
         className={styles.menuLink}
-        href="#"
-        aria-label="Configurações"
-        title="Configurações"
+        href='/settings/'
+        aria-label='Configurações'
+        title='Configurações'
       >
         <SettingsIcon />
-      </a>
+      </RouterLink>
 
       <a
         className={styles.menuLink}
-        href="#"
-        aria-label="Mudar Tema"
-        title="Mudar Tema"
+        href='#'
+        aria-label='Mudar Tema'
+        title='Mudar Tema'
         onClick={handleThemeChange}
       >
         {nextThemeIcon[theme]}
