@@ -1,11 +1,11 @@
-import { useEffect, useReducer, useRef } from 'react';
-import { initialTaskState } from './initialTaskState';
-import { taskReducer } from './taskReducer';
-import { TaskContext } from './TaskContext';
-import { TimerWorkerManager } from '../../workers/TimerWorkerManager';
-import { TaskActionTypes } from './TaskActions';
-import { loadBeep } from '../../utils/loadBeep';
-import type { TaskStateModel } from '../../models/TaskStateModel';
+import { useEffect, useReducer, useRef } from "react";
+import { initialTaskState } from "./initialTaskState";
+import { taskReducer } from "./taskReducer";
+import { TaskContext } from "./TaskContext";
+import { TimerWorkerManager } from "../../workers/TimerWorkerManager";
+import { TaskActionTypes } from "./TaskActions";
+import { loadBeep } from "../../utils/loadBeep";
+import type { TaskStateModel } from "../../models/TaskStateModel";
 
 type TaskContextProviderProps = {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ type TaskContextProviderProps = {
 
 export function TaskContextProvider({ children }: TaskContextProviderProps) {
   const [state, dispatch] = useReducer(taskReducer, initialTaskState, () => {
-    const storageState = localStorage.getItem('state');
+    const storageState = localStorage.getItem("state");
 
     if (storageState === null) return initialTaskState;
 
@@ -23,7 +23,7 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
       ...parsedStorageState,
       activeTask: null,
       secondsRemaining: 0,
-      formattedSecondsRemaining: '00:00',
+      formattedSecondsRemaining: "00:00",
     };
   });
 
@@ -41,7 +41,7 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
 
     if (!workerRef.current) {
       workerRef.current = TimerWorkerManager.getInstance();
-      workerRef.current.onmessage(e => {
+      workerRef.current.onmessage((e) => {
         const countDownSeconds = e.data;
 
         if (countDownSeconds <= 0) {
@@ -67,8 +67,8 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
   }, [state]);
 
   useEffect(() => {
-    localStorage.setItem('state', JSON.stringify(state));
-    document.title = `${state.formattedSecondsRemaining} - Chronos Pomodoro`;
+    localStorage.setItem("state", JSON.stringify(state));
+    document.title = `${state.formattedSecondsRemaining} - Nebulos`;
   }, [state]);
 
   useEffect(() => {

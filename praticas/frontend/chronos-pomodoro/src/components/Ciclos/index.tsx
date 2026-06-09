@@ -1,7 +1,8 @@
-import { useTaskContext } from '../../contexts/TaskContext/useTaskContext';
-import { getNextCycle } from '../../utils/getNextCycle';
-import { getNextCycleType } from '../../utils/getNextCycleType';
-import styles from './styles.module.css';
+import { useTaskContext } from "../../contexts/TaskContext/useTaskContext";
+import { getNextCycle } from "../../utils/getNextCycle";
+import { getNextCycleType } from "../../utils/getNextCycleType";
+import styles from "./styles.module.css";
+import { SparklesIcon } from "lucide-react";
 
 export function Ciclos() {
   const { state } = useTaskContext();
@@ -9,9 +10,9 @@ export function Ciclos() {
   const cycleStep = Array.from({ length: state.currentCycle });
 
   const cycleDescriptionMap = {
-    workTime: 'foco',
-    shortBreakTime: 'decanso curso',
-    longBreakTime: 'descanso longo',
+    workTime: "foco",
+    shortBreakTime: "decanso curso",
+    longBreakTime: "descanso longo",
   };
 
   return (
@@ -28,7 +29,9 @@ export function Ciclos() {
               className={`${styles.cycleDot} ${styles[nextCycleType]}`}
               aria-label={`Indicador de ciclo de ${cycleDescriptionMap[nextCycleType]}`}
               title={`Indicador de ciclo de ${cycleDescriptionMap[nextCycleType]}`}
-            ></span>
+            >
+              <SparklesIcon />
+            </span>
           );
         })}
       </div>

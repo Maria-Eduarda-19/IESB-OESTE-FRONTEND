@@ -1,5 +1,5 @@
 /* Container principal (Texto + Bolinhas) */
-.ciclos {
+.cycles {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8,26 +8,24 @@
 }
 
 /* Container que segura as bolinhas lado a lado */
-.cicloDots {
+.cycleDots {
   display: flex;
   gap: 0.8rem;
 }
 
 /* A bolinha base */
-.cicloDot {
+.cycleDot {
   width: 2rem;
   height: 2rem;
-  background-color: var(--primary); /* Cor base */
-  border-radius: 50%; /* Transforma o quadrado em círculo */
 }
 
 /* Cores específicas para os diferentes tipos de ciclo */
 .workTime {
-  background: var(--warning);
+  color: var(--warning);
 }
 .shortBreakTime {
-  background: var(--primary);
+  color: var(--primary);
 }
 .longBreakTime {
-  background: var(--info);
+  color: var(--info);
 }
