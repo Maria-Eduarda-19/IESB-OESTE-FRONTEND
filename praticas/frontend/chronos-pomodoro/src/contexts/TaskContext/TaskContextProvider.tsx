@@ -6,6 +6,7 @@ import { TimerWorkerManager } from "../../workers/TimerWorkerManager";
 import { TaskActionTypes } from "./TaskActions";
 import { loadBeep } from "../../utils/loadBeep";
 import type { TaskStateModel } from "../../models/TaskStateModel";
+import { completeTask, getSettings, getTasks } from "../../services/api";
 
 type TaskContextProviderProps = {
   children: React.ReactNode;
@@ -28,48 +29,47 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
   });
 
   const playBeepRef = useRef<ReturnType<typeof loadBeep> | null>(null);
-  const workerRef = useRef<TimerWorkerManager | null>(null);
+  const syncedCompletionIdsRef = useRef<Set<string>>(new Set());
+
+  const worker = TimerWorkerManager.getInstance();
 
   useEffect(() => {
-    if (!state.activeTask) {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
-      return;
-    }
+    worker.onmessage((e) => {
+      const countDownSeconds = e.data;
 
-    if (!workerRef.current) {
-      workerRef.current = TimerWorkerManager.getInstance();
-      workerRef.current.onmessage((e) => {
-        const countDownSeconds = e.data;
-
-        if (countDownSeconds <= 0) {
-          if (playBeepRef.current) {
-            playBeepRef.current();
-            playBeepRef.current = null;
-          }
-          dispatch({
-            type: TaskActionTypes.COMPLETE_TASK,
-          });
-          workerRef.current?.terminate();
-          workerRef.current = null;
-        } else {
-          dispatch({
-            type: TaskActionTypes.COUNT_DOWN,
-            payload: { secondsRemaining: countDownSeconds },
-          });
+      if (countDownSeconds <= 0) {
+        if (playBeepRef.current) {
+          playBeepRef.current();
+          playBeepRef.current = null;
         }
-      });
-    }
-
-    workerRef.current.postMessage(state);
-  }, [state]);
+        dispatch({
+          type: TaskActionTypes.COMPLETE_TASK,
+        });
+        worker.terminate();
+      } else {
+        dispatch({
+          type: TaskActionTypes.COUNT_DOWN,
+          payload: { secondsRemaining: countDownSeconds },
+        });
+      }
+    });
+  }, [worker]);
 
   useEffect(() => {
     localStorage.setItem("state", JSON.stringify(state));
-    document.title = `${state.formattedSecondsRemaining} - Nebulos`;
-  }, [state]);
+
+    document.title = `${state.formattedSecondsRemaining} - Chronos Pomodoro`;
+
+    if (!state.activeTask) {
+      // Não há tarefa ativa: garante que o worker seja finalizado e evita
+      // postar mensagens para um worker terminado.
+      worker.terminate();
+      return;
+    }
+
+    // Só envia o estado ao worker quando houver uma tarefa ativa.
+    worker.postMessage(state);
+  }, [worker, state]);
 
   useEffect(() => {
     if (state.activeTask && playBeepRef.current === null) {
@@ -78,6 +78,53 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
       playBeepRef.current = null;
     }
   }, [state.activeTask]);
+
+  useEffect(() => {
+    async function hydrateFromApi() {
+      try {
+        const [apiSettings, apiTasks] = await Promise.all([
+          getSettings(),
+          getTasks(),
+        ]);
+
+        dispatch({
+          type: TaskActionTypes.CHANGE_SETTINGS,
+          payload: {
+            workTime: apiSettings.workTime,
+            shortBreakTime: apiSettings.shortBreakTime,
+            longBreakTime: apiSettings.longBreakTime,
+          },
+        });
+        dispatch({ type: TaskActionTypes.HYDRATE_TASKS, payload: apiTasks });
+
+        syncedCompletionIdsRef.current = new Set(
+          apiTasks
+            .filter((task) => task.completeDate !== null)
+            .map((task) => task.id),
+        );
+      } catch {
+        // Se a API estiver indisponível, mantém funcionamento local.
+      }
+    }
+
+    hydrateFromApi();
+  }, []);
+
+  useEffect(() => {
+    const tasksToSync = state.tasks.filter(
+      (task) =>
+        task.completeDate !== null &&
+        !syncedCompletionIdsRef.current.has(task.id),
+    );
+
+    tasksToSync.forEach((task) => {
+      if (task.completeDate === null) return;
+      syncedCompletionIdsRef.current.add(task.id);
+      completeTask(task.id, task.completeDate).catch(() => {
+        syncedCompletionIdsRef.current.delete(task.id);
+      });
+    });
+  }, [state.tasks]);
 
   return (
     <TaskContext.Provider value={{ state, dispatch }}>
