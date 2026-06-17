@@ -31,45 +31,51 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
   const playBeepRef = useRef<ReturnType<typeof loadBeep> | null>(null);
   const syncedCompletionIdsRef = useRef<Set<string>>(new Set());
 
-  const worker = TimerWorkerManager.getInstance();
+  const workerRef = useRef<TimerWorkerManager | null>(null);
 
   useEffect(() => {
-    worker.onmessage((e) => {
-      const countDownSeconds = e.data;
-
-      if (countDownSeconds <= 0) {
-        if (playBeepRef.current) {
-          playBeepRef.current();
-          playBeepRef.current = null;
-        }
-        dispatch({
-          type: TaskActionTypes.COMPLETE_TASK,
-        });
-        worker.terminate();
-      } else {
-        dispatch({
-          type: TaskActionTypes.COUNT_DOWN,
-          payload: { secondsRemaining: countDownSeconds },
-        });
-      }
-    });
-  }, [worker]);
-
-  useEffect(() => {
-    localStorage.setItem("state", JSON.stringify(state));
-
-    document.title = `${state.formattedSecondsRemaining} - Chronos Pomodoro`;
-
     if (!state.activeTask) {
-      // Não há tarefa ativa: garante que o worker seja finalizado e evita
-      // postar mensagens para um worker terminado.
-      worker.terminate();
+      if (workerRef.current) {
+        workerRef.current.terminate();
+        workerRef.current = null;
+      }
       return;
     }
 
-    // Só envia o estado ao worker quando houver uma tarefa ativa.
-    worker.postMessage(state);
-  }, [worker, state]);
+    if (!workerRef.current) {
+      workerRef.current = TimerWorkerManager.getInstance();
+
+      workerRef.current.onmessage((e) => {
+        const countDownSeconds = e.data;
+
+        if (countDownSeconds <= 0) {
+          if (playBeepRef.current) {
+            playBeepRef.current();
+            playBeepRef.current = null;
+          }
+
+          dispatch({
+            type: TaskActionTypes.COMPLETE_TASK,
+          });
+
+          workerRef.current?.terminate();
+          workerRef.current = null;
+        } else {
+          dispatch({
+            type: TaskActionTypes.COUNT_DOWN,
+            payload: { secondsRemaining: countDownSeconds },
+          });
+        }
+      });
+    }
+
+    workerRef.current.postMessage(state);
+  }, [state]);
+
+  useEffect(() => {
+    localStorage.setItem("state", JSON.stringify(state));
+    document.title = `${state.formattedSecondsRemaining} - Chronos Pomodoro`;
+  }, [state]);
 
   useEffect(() => {
     if (state.activeTask && playBeepRef.current === null) {
@@ -120,8 +126,17 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
     tasksToSync.forEach((task) => {
       if (task.completeDate === null) return;
       syncedCompletionIdsRef.current.add(task.id);
-      completeTask(task.id, task.completeDate).catch(() => {
-        syncedCompletionIdsRef.current.delete(task.id);
+      completeTask(task.id, task.completeDate)
+        .then(() => {
+          console.log("Tarefa sincronizada com sucesso");
+        })
+        .catch((error) => {
+          console.error("Erro ao sincronizar tarefa:", error);
+          syncedCompletionIdsRef.current.delete(task.id);
+        });
+      console.log("Enviando:", {
+        id: task.id,
+        completeDate: task.completeDate,
       });
     });
   }, [state.tasks]);
